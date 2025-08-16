@@ -11,7 +11,15 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
-dependencies = ["psycopg[binary]", "pgvector", "numpy", "loguru", "rich"]
+dependencies = [
+  "loguru",
+  "numpy",
+  "pgvector",
+  "psycopg[binary, pool]",
+  "pydantic",
+  "pydantic-settings",
+  "rich",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/yunho-c/graphics-db"

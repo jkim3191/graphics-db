@@ -1,0 +1,17 @@
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import PostgresDsn
+
+# Consts
+TABLE_NAME = "assets"
+EMBEDDING_DIMS = 768
+INDEX_NAME = "assets_emb"
+INDEX_TYPE = "diskann"
+SIMILARITY_OPS = "vector_cosine_ops"
+
+
+class DBSettings(BaseSettings):
+    DATABASE_URL: PostgresDsn
+    SettingsConfigDict(env_file=".env")
+
+
+db_settings = DBSettings()
