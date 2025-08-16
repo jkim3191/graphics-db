@@ -10,12 +10,26 @@ services:
     ports:
       - "5432:5432" # postgres
       
-    # named volume for data persistence
-    volumes:
+    volumes: # for data persistence
       - postgres_data:/var/lib/postgresql/data
     
     # auto-restart on crash
     restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  db-setup:
+    build: .
+    profiles: 
+      - setup
+    depends_on:
+      db:
+        condition: service_healthy
+    command: setup.sh
 
 volumes:
   postgres_data:
