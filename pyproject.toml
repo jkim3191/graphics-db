@@ -13,6 +13,7 @@ classifiers = [
 ]
 dependencies = [
   "compress-pickle",
+  "fastapi",
   "loguru",
   "numpy",
   "objaverse",
@@ -21,6 +22,7 @@ dependencies = [
   "pydantic",
   "pydantic-settings",
   "rich",
+  "uvicorn",
 ]
 
 [project.urls]

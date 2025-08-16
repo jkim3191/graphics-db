@@ -13,6 +13,7 @@ from graphics_db_server.logging import logger
 
 EXTENSION_ENABLE_SQL = """
 CREATE EXTENSION IF NOT EXISTS vectorscale CASCADE;
+CREATE EXTENSION IF NOT EXISTS vector CASCADE;
 """  # CASCADE auto-installs pgvector
 
 ASSET_TABLE_CREATION_SQL = f"""
@@ -40,11 +41,11 @@ def setup_databse():
 
     pool = ConnectionPool(conninfo=db_settings.DATABASE_URL)
     with pool.getconn() as conn:
-        register_vector(conn)
         with conn.cursor() as cur:
             logger.info("Enabling extensions...")
             cur.execute(EXTENSION_ENABLE_SQL)
             logger.info("Extensions are ready.")
+            register_vector(conn)
 
             logger.info("Creating table...")
             cur.execute(ASSET_TABLE_CREATION_SQL)

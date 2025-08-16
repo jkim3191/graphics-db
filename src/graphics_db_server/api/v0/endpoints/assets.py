@@ -3,12 +3,12 @@ from fastapi import APIRouter
 
 from graphics_db_server.db.session import get_db_connection
 from graphics_db_server.db import crud
-from graphics_db_server.schemas.asset import SearchResult
+from graphics_db_server.schemas.asset import Asset
 
 router = APIRouter()
 
 
-@router.post("/search", response_model=list[SearchResult])
+@router.post("/search", response_model=list[Asset])
 def search_assets(query_vector: list[float], top_k: int = 5):
     """
     Finds the top_k most similar assets for a given query vector.

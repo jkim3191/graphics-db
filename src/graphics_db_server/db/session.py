@@ -4,10 +4,10 @@ from contextlib import contextmanager
 from psycopg_pool import ConnectionPool
 from pgvector.psycopg import register_vector
 
-from graphics_db_server.core.config import settings
+from graphics_db_server.core.config import db_settings
 
 # reusable connection pool
-pool = ConnectionPool(conninfo=str(settings.DATABASE_URL))
+pool = ConnectionPool(conninfo=str(db_settings.DATABASE_URL))
 
 
 @contextmanager
