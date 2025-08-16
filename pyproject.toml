@@ -1,0 +1,32 @@
+[project]
+name = "graphics-db"
+version = "0.0.1"
+description = " Search and download graphics assets."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+  { name = "Yunho Cho", email = "opensource@yunhocho.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/yunho-c/graphics-db"
+"Bug Tracker" = "https://github.com/yunho-c/graphics-db/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build_meta"
+
+[tool.hatch.version]
+path = "src/graphics_db/__init__.py"
+
+[tool.hatch.envs.default]
+dependencies = [
+  "pytest",
+  "pytest-cov",
+]
