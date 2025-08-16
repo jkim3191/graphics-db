@@ -4,7 +4,7 @@ from pydantic import PostgresDsn
 # Consts
 TABLE_NAME = "assets"
 EMBEDDING_DIMS = 768
-INDEX_NAME = "assets_emb"
+INDEX_NAME = "assets_vec_idx"
 INDEX_TYPE = "diskann"
 SIMILARITY_OPS = "vector_cosine_ops"
 

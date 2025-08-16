@@ -3,6 +3,8 @@ from typing import Any
 
 import numpy as np
 import objaverse
+
+# import objaverse.xl as oxl
 from pydantic import BaseModel
 
 from graphics_db_server.schemas.asset import AssetCreate
@@ -31,19 +33,20 @@ def load_objaverse_assets(limit: int = None) -> list[AssetCreate]:
         if not _is_valid_annotation(annotation):
             continue
 
-        # Construct URL from file identifier
-        url = f"https://huggingface.co/datasets/allenai/objaverse/resolve/main/{annotation['fileIdentifier']}"
-
         asset = AssetCreate(
-            id=uuid.uuid4(),
-            url=url,
+            uid=uid,
+            url=annotation.get("viewerUrl"),  # NOTE: there's also uri
             tags=annotation.get("tags"),
             source="objaverse",
-            sourceId="",  # TODO
-            license="",  # TODO
+            # sourceId="",  # TODO
+            license=annotation.get("license"),  # TODO
             embedding="",  # TODO
             # bounding_box=annotation.get("boundingBox"),  # ?
         )
         assets.append(asset)
 
     return assets
+
+
+if __name__ == "__main__":
+    load_objaverse_assets(limit=3)
