@@ -8,6 +8,8 @@ INDEX_NAME = "assets_vec_idx"
 INDEX_TYPE = "diskann"
 SIMILARITY_OPS = "vector_cosine_ops"
 
+EMBEDDING_PATHS = {"Objaverse": "data/objaverse/clip_features.pkl"}
+
 
 class DBSettings(BaseSettings):
     DATABASE_URL: PostgresDsn

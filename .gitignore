@@ -1,5 +1,6 @@
 # Custom
 .env
+data/*/*.pkl
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,windows,macos,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,windows,macos,linux

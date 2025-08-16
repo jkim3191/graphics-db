@@ -12,8 +12,10 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 dependencies = [
+  "compress-pickle",
   "loguru",
   "numpy",
+  "objaverse",
   "pgvector",
   "psycopg[binary, pool]",
   "pydantic",
