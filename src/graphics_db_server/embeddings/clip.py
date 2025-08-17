@@ -3,6 +3,8 @@ import open_clip
 import torch
 import torch.nn.functional as F
 
+from graphics_db_server.core.config import USE_MEAN_POOL
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Models
@@ -23,4 +25,11 @@ def get_clip_embeddings(text_query: str):
             clip_tokenizer([text_query]).to(device)
         )
         query_feature_clip = F.normalize(query_feature_clip, p=2, dim=-1)
-    return query_feature_clip
+
+        if query_feature_clip.ndim != 1:
+            if USE_MEAN_POOL:
+                query_feature_clip = query_feature_clip.mean(0)
+            else:
+                raise NotImplementedError()
+
+    return query_feature_clip.numpy()

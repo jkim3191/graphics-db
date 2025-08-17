@@ -13,6 +13,9 @@ SIMILARITY_OPS = "vector_cosine_ops"
 # Data sources
 EMBEDDING_PATHS = {"Objaverse": "data/objaverse/clip_features.pkl"}
 
+# App
+USE_MEAN_POOL = True
+
 
 class DBSettings(BaseModel):
     pguser: str = os.environ["POSTGRES_USER"]

@@ -10,7 +10,7 @@ import objaverse
 from pydantic import BaseModel
 
 from graphics_db_server.schemas.asset import AssetCreate
-from graphics_db_server.core.config import EMBEDDING_PATHS
+from graphics_db_server.core.config import EMBEDDING_PATHS, USE_MEAN_POOL
 
 
 def _is_valid_annotation(annotation: dict[str, Any]) -> bool:
@@ -81,6 +81,12 @@ def load_objaverse_assets(limit: int = None) -> list[AssetCreate]:
         embedding = embedding_map.get(uid)
         if embedding is None:
             continue
+
+        if embedding.ndim != 1:
+            if USE_MEAN_POOL:
+                embedding = embedding.mean(0)
+            else:
+                raise NotImplementedError()
 
         asset = AssetCreate(
             uid=uid,

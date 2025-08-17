@@ -18,7 +18,7 @@ def search_assets(conn, query_embedding: np.ndarray, top_k: int) -> list[dict]:
         cur.execute(
             f"""
             SELECT
-                id,
+                uid,
                 url,
                 1 - (embedding <=> %(query_vector)s) AS similarity_score
             FROM {TABLE_NAME}
@@ -28,6 +28,8 @@ def search_assets(conn, query_embedding: np.ndarray, top_k: int) -> list[dict]:
             {"query_vector": query_embedding, "limit": top_k},
         )
         results = cur.fetchall()
+    if not results:
+        logger.warning("No results found. The database might be empty.")
     return results
 
 
@@ -40,9 +42,8 @@ def insert_assets(conn, assets: List[Asset]):
     for asset in assets:
         data.append(
             (
-                asset.id,
+                asset.uid,
                 asset.url,
-                json.dumps(asset.bounding_box),
                 asset.tags,
                 asset.embedding,
             )
@@ -50,7 +51,7 @@ def insert_assets(conn, assets: List[Asset]):
 
     with conn.cursor() as cur:
         cur.executemany(
-            "INSERT INTO assets (id, asset_url, bounding_box, tags, embedding) VALUES (%s, %s, %s, %s, %s)",
+            "INSERT INTO assets (uid, url, tags, embedding) VALUES (%s, %s, %s, %s)",
             data,
         )
 

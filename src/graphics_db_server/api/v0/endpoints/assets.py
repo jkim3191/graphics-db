@@ -10,18 +10,18 @@ from graphics_db_server.schemas.asset import Asset
 router = APIRouter()
 
 
-@router.get("/v0/assets/search", response_model=list[Asset])
+@router.get("/assets/search", response_model=list[Asset])
 def search_assets(query: str, top_k: int = 5):
     """
     Finds the top_k most similar assets for a given query.
     """
     query_embedding = get_clip_embeddings(query)
-    logger.info(f"{query_embedding=}")
     with get_db_connection() as conn:
         results = crud.search_assets(
             conn=conn, query_embedding=query_embedding, top_k=top_k
         )
     if not results:
+        logger.debug(f"No results found for query: {query}")
         return []
     else:
         return results

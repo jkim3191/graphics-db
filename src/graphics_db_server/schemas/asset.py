@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class Asset(BaseModel):
-    uid: uuid.UUID
+    uid: str
     url: str
     tags: Optional[list[str]] = []
     source: str
