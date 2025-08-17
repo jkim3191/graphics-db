@@ -17,8 +17,21 @@ def _is_valid_annotation(annotation: dict[str, Any]) -> bool:
     """
     Checks if an objaverse annotation has all the required fields and non-None values.
     """
-    required_fields = ["fileIdentifier", "tags", "boundingBox"]
+    required_fields = ["uid", "viewerUrl", "tags", "license"]
     return not any(annotation.get(field) is None for field in required_fields)
+
+
+def _get_tag_names(tags: list[dict[str, Any]]) -> list[str]:
+    """
+    Extracts the 'name' from a list of tag dictionaries.
+    """
+    if not isinstance(tags, list):
+        return []
+    return [
+        tag["name"]
+        for tag in tags
+        if isinstance(tag, dict) and isinstance(tag.get("name"), str)
+    ]
 
 
 def _load_embedding_map(
@@ -72,12 +85,10 @@ def load_objaverse_assets(limit: int = None) -> list[AssetCreate]:
         asset = AssetCreate(
             uid=uid,
             url=annotation.get("viewerUrl"),  # NOTE: there's also uri
-            tags=annotation.get("tags"),
+            tags=_get_tag_names(annotation.get("tags")),
             source="objaverse",
-            # sourceId="",  # NOTE: let's try not to keep this unless really necessary
-            license=annotation.get("license"),  # TODO
+            license=annotation.get("license"),
             embedding=embedding,
-            # bounding_box=annotation.get("boundingBox"),  # ?
         )
         assets.append(asset)
 

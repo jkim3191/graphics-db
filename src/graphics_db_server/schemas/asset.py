@@ -10,8 +10,8 @@ class Asset(BaseModel):
     url: str
     tags: Optional[list[str]] = []
     source: str
-    # sourceId: str  # NOTE: let's try not to keep this unless really necessary
     license: str
+    # sourceId: str  # NOTE: let's try not to keep this unless really necessary
 
     model_config = ConfigDict(from_attributes=True)
 

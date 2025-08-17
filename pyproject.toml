@@ -17,11 +17,13 @@ dependencies = [
   "loguru",
   "numpy",
   "objaverse",
+  "open_clip_torch",
   "pgvector",
   "psycopg[binary, pool]",
   "pydantic",
   "pydantic-settings",
   "rich",
+  "torch",
   "uvicorn",
 ]
 
