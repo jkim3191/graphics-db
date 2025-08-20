@@ -122,17 +122,18 @@ def get_thumbnails(asset_paths):
     # HACK: this is actually unfathomably hacky but whatever... it freaking works.
     subprocess.run(
         [
-            "py",
+            "python",
             Path("~/GitHub/scripts/generate_thumbnails_for_glb.py").expanduser(),
             Path("~/.objaverse").expanduser(),
         ]
     )
-    image_paths = []
-    for i, (id, path) in enumerate(asset_paths.items()):
+    asset_thumbnails = {}
+    for uid, path in asset_paths.items():
         image_path = Path(path.replace(".glb", ".png")).expanduser()
-        image_paths.append(image_path)
+        if image_path.exists():
+            asset_thumbnails[uid] = image_path
 
-    return image_paths
+    return asset_thumbnails
 
 
 if __name__ == "__main__":
