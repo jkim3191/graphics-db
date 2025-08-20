@@ -1,7 +1,5 @@
 import os
 import multiprocessing
-import subprocess
-import uuid
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +11,12 @@ import objaverse
 from pydantic import BaseModel
 
 from graphics_db_server.schemas.asset import AssetCreate
-from graphics_db_server.core.config import EMBEDDING_PATHS, USE_MEAN_POOL
+from graphics_db_server.core.config import (
+    EMBEDDING_PATHS,
+    USE_MEAN_POOL,
+    THUMBNAIL_RESOLUTION,
+)
+from graphics_db_server.utils.thumbnail import generate_thumbnail_from_glb
 
 
 def _is_valid_annotation(annotation: dict[str, Any]) -> bool:
@@ -118,20 +121,29 @@ def download_assets(asset_ids: list[str]):
     return asset_paths
 
 
-def get_thumbnails(asset_paths):
-    # HACK: this is actually unfathomably hacky but whatever... it freaking works.
-    subprocess.run(
-        [
-            "python",
-            Path("~/GitHub/scripts/generate_thumbnails_for_glb.py").expanduser(),
-            Path("~/.objaverse").expanduser(),
-        ]
-    )
+def get_thumbnails(asset_paths: dict[str, str]) -> dict[str, Path]:
+    """
+    Generates thumbnails for a dictionary of asset paths.
+
+    Args:
+        asset_paths: A dictionary mapping asset UIDs to their .glb file paths.
+
+    Returns:
+        A dictionary mapping asset UIDs to the file paths of their generated thumbnails.
+    """
     asset_thumbnails = {}
-    for uid, path in asset_paths.items():
-        image_path = Path(path.replace(".glb", ".png")).expanduser()
-        if image_path.exists():
-            asset_thumbnails[uid] = image_path
+    for uid, glb_path_str in asset_paths.items():
+        glb_path = Path(glb_path_str).resolve()
+        output_path = glb_path.with_suffix(".png")
+
+        generate_thumbnail_from_glb(
+            glb_path=str(glb_path),
+            output_path=str(output_path),
+            resolution=THUMBNAIL_RESOLUTION,
+        )
+
+        if output_path.exists():
+            asset_thumbnails[uid] = output_path
 
     return asset_thumbnails
 

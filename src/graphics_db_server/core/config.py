@@ -15,6 +15,7 @@ EMBEDDING_PATHS = {"Objaverse": "data/objaverse/clip_features.pkl"}
 
 # App
 USE_MEAN_POOL = True
+THUMBNAIL_RESOLUTION = 1024
 
 
 class DBSettings(BaseModel):

@@ -1,6 +1,10 @@
 import requests
 import base64
 
+import io
+
+from PIL import Image
+
 from src.graphics_db_server.logging import logger
 from test_asset_retrieval import test_asset_search
 
@@ -23,7 +27,12 @@ def test_thumbnail_retrieval():
     for uid, image_data in response_json.items():
         assert uid in asset_uids
         # Check if the image data is a valid base64 string
-        assert base64.b64decode(image_data)
+        decoded_image = base64.b64decode(image_data)
+        assert decoded_image
+
+        # Load the image data into a PIL image
+        image = Image.open(io.BytesIO(decoded_image))
+        assert image
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ pgvector
 psycopg[binary, pool]
 pydantic
 pydantic-settings
+pyvista
 rich
 torch
 uvicorn
