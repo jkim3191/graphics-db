@@ -9,8 +9,8 @@ class Asset(BaseModel):
     uid: str
     url: str
     tags: Optional[list[str]] = []
-    source: str
-    license: str
+    source: str | None = None # TEMP
+    license: str | None = None # TEMP
     # sourceId: str  # NOTE: let's try not to keep this unless really necessary
 
     model_config = ConfigDict(from_attributes=True)

@@ -54,5 +54,6 @@ def insert_assets(conn, assets: List[Asset]):
             "INSERT INTO assets (uid, url, tags, embedding) VALUES (%s, %s, %s, %s)",
             data,
         )
+        conn.commit()
 
     logger.success(f"Inserted {len(assets)} assets.")
