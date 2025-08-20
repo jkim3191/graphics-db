@@ -1,5 +1,8 @@
 import os
+import multiprocessing
+import subprocess
 import uuid
+from pathlib import Path
 from typing import Any
 
 import compress_pickle
@@ -99,6 +102,37 @@ def load_objaverse_assets(limit: int = None) -> list[AssetCreate]:
         assets.append(asset)
 
     return assets
+
+
+def download_assets(asset_ids: list[str]):
+    """
+    Downloads 3D assets from Objaverse based on a list of asset UIDs.
+
+    Args:
+        asset_ids (list[str]): A list of asset UIDs to download.
+    """
+    processes = multiprocessing.cpu_count()
+    asset_paths = objaverse.load_objects(
+        uids=asset_ids, download_processes=int(processes / 2)
+    )
+    return asset_paths
+
+
+def get_thumbnails(asset_paths):
+    # HACK: this is actually unfathomably hacky but whatever... it freaking works.
+    subprocess.run(
+        [
+            "py",
+            Path("~/GitHub/scripts/generate_thumbnails_for_glb.py").expanduser(),
+            Path("~/.objaverse").expanduser(),
+        ]
+    )
+    image_paths = []
+    for i, (id, path) in enumerate(asset_paths.items()):
+        image_path = Path(path.replace(".glb", ".png")).expanduser()
+        image_paths.append(image_path)
+
+    return image_paths
 
 
 if __name__ == "__main__":
