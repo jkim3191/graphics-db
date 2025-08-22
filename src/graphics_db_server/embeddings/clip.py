@@ -15,6 +15,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 ) = open_clip.create_model_and_transforms(
     "ViT-L-14",
     pretrained="laion2b_s32b_b82k",
+    device=device,
 )
 clip_tokenizer = open_clip.get_tokenizer("ViT-L-14")
 
@@ -26,10 +27,9 @@ def get_clip_embeddings(text_query: str):
         )
         query_feature_clip = F.normalize(query_feature_clip, p=2, dim=-1)
 
-        if query_feature_clip.ndim != 1:
-            if USE_MEAN_POOL:
-                query_feature_clip = query_feature_clip.mean(0)
-            else:
-                raise NotImplementedError()
+        # Squeeze the batch dimension for a single query and move to CPU
+        return query_feature_clip.squeeze(0).cpu().numpy()
 
-    return query_feature_clip.numpy()
+
+if __name__ == "__main__":
+    get_clip_embeddings("a blue car")

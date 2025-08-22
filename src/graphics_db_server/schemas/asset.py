@@ -17,7 +17,8 @@ class Asset(BaseModel):
 
 
 class AssetCreate(Asset):
-    embedding: list[float] | np.ndarray
+    clip_embedding: list[float] | np.ndarray
+    sbert_embedding: list[float] | np.ndarray
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 

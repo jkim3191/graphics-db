@@ -41,27 +41,31 @@ def _get_tag_names(tags: list[dict[str, Any]]) -> list[str]:
 
 
 def _load_embedding_map(
-    embeddings_path: str = EMBEDDING_PATHS["Objaverse"],
+    embedding_type: str,
+    data_source: str = "Objaverse",
 ) -> dict[str, np.ndarray]:
     """
-    Loads CLIP embeddings from a pickled file and returns a map from UID to embedding.
+    Loads embeddings from a pickled file and returns a map from UID to embedding.
 
-    The pickled file is expected to be a dictionary with two keys:
-    - "uids": A list of object UIDs.
-    - "img_features": A numpy array of CLIP image features.
+    The pickled file is expected to be a dictionary with keys for UIDs and features.
 
     Args:
-        embeddings_path: The path to the pickled embeddings file.
+        embedding_type: The type of embedding to load ('clip' or 'sbert').
+        data_source: The name of the data source from the config.
 
     Returns:
         A dictionary mapping object UIDs to their corresponding embedding vectors.
     """
-    if not os.path.exists(embeddings_path):
-        raise FileNotFoundError(f"Embeddings file not found at {embeddings_path}")
+    path = EMBEDDING_PATHS[data_source][embedding_type]
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Embeddings file not found at {path}")
 
-    embeddings_dict = compress_pickle.load(embeddings_path)
+    embeddings_dict = compress_pickle.load(path)
     uids_with_embeddings = embeddings_dict["uids"]
-    embeddings = embeddings_dict["img_features"].astype(np.float32)
+
+    feature_key = "img_features" if embedding_type == "clip" else "text_features"
+    embeddings = embeddings_dict[feature_key].astype(np.float32)
+
     embedding_map = {
         uid: embedding for uid, embedding in zip(uids_with_embeddings, embeddings)
     }
@@ -74,7 +78,8 @@ def load_objaverse_assets(limit: int = None) -> list[AssetCreate]:
     """
     # NOTE: this will download a ~3GB file on first run.
     annotations = objaverse.load_annotations()
-    embedding_map = _load_embedding_map()
+    clip_embedding_map = _load_embedding_map("clip")
+    sbert_embedding_map = _load_embedding_map("sbert")
 
     assets: list[AssetCreate] = []
     for uid, annotation in annotations.items():
@@ -84,13 +89,17 @@ def load_objaverse_assets(limit: int = None) -> list[AssetCreate]:
         if not _is_valid_annotation(annotation):
             continue
 
-        embedding = embedding_map.get(uid)
-        if embedding is None:
+        clip_embedding = clip_embedding_map.get(uid)
+        sbert_embedding = sbert_embedding_map.get(uid)
+        if clip_embedding is None or sbert_embedding is None:
             continue
 
-        if embedding.ndim != 1:
+        if clip_embedding.ndim != 1:
             if USE_MEAN_POOL:
-                embedding = embedding.mean(0)
+                # NOTE: The reference implementation handles this differently at query
+                #       time, by taking the maximum similarity across all embeddings
+                #       for a single item. This is often a more effective approach.
+                clip_embedding = clip_embedding.mean(0)
             else:
                 raise NotImplementedError()
 
@@ -100,7 +109,8 @@ def load_objaverse_assets(limit: int = None) -> list[AssetCreate]:
             tags=_get_tag_names(annotation.get("tags")),
             source="objaverse",
             license=annotation.get("license"),
-            embedding=embedding,
+            clip_embedding=clip_embedding,
+            sbert_embedding=sbert_embedding,
         )
         assets.append(asset)
 

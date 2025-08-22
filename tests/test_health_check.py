@@ -7,7 +7,7 @@ def test_health_check():
     """
     Tests that the healthcheck endpoint works.
     """
-    response = requests.get("http://localhost:8000/healthcheck")
+    response = requests.get("http://localhost:2692/healthcheck")
     logger.info(f"Healthcheck response: {response.json()}")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
