@@ -17,6 +17,13 @@ EMBEDDING_PATHS = {"Objaverse": "data/objaverse/clip_features.pkl"}
 USE_MEAN_POOL = True
 THUMBNAIL_RESOLUTION = 1024
 
+# Material-specific settings
+MATERIAL_CACHE_DIR = "~/.polyhaven_cache"
+DEFAULT_MATERIAL_RESOLUTION = "2k"
+SUPPORTED_MATERIAL_TYPES = ["floor", "wall", "brick", "wood", "concrete", "plaster-concrete"]
+POLY_HAVEN_API_BASE = "https://api.polyhaven.com"
+POLY_HAVEN_CDN_BASE = "https://cdn.polyhaven.com"
+
 
 class DBSettings(BaseModel):
     pguser: str = os.environ["POSTGRES_USER"]

@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional
+from typing import Optional, Literal
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict
@@ -12,6 +12,9 @@ class Asset(BaseModel):
     source: str | None = None # TEMP
     license: str | None = None # TEMP
     # sourceId: str  # NOTE: let's try not to keep this unless really necessary
+    
+    # Essential field to distinguish asset types
+    asset_type: Literal["model", "material"] = "model"
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -25,6 +25,9 @@ CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
     
     url TEXT,
     tags TEXT[],
+    source TEXT,
+    license TEXT,
+    asset_type TEXT DEFAULT 'model',
     embedding VECTOR({EMBEDDING_DIMS})
 )
 """
