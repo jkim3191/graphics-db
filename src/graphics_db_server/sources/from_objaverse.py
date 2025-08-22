@@ -90,6 +90,9 @@ def load_objaverse_assets(limit: int = None) -> list[AssetCreate]:
 
         if embedding.ndim != 1:
             if USE_MEAN_POOL:
+                # NOTE: The reference implementation handles this differently at query 
+                #       time, by taking the maximum similarity across all embeddings 
+                #       for a single item. This is often a more effective approach.
                 embedding = embedding.mean(0)
             else:
                 raise NotImplementedError()
