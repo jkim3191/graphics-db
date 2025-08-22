@@ -17,7 +17,7 @@ def test_thumbnail_retrieval():
     asset_uids = [asset["uid"] for asset in search_results]
 
     response = requests.post(
-        "http://localhost:8000/api/v0/assets/thumbnails",
+        "http://localhost:2692/api/v0/assets/thumbnails",
         json={"asset_uids": asset_uids},
     )
     logger.info(f"Asset UIDs: {asset_uids}. Response: {response}")
