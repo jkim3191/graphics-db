@@ -1,3 +1,5 @@
+import argparse
+
 from pgvector.psycopg import register_vector
 from psycopg_pool import ConnectionPool
 
@@ -25,18 +27,25 @@ CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
     
     url TEXT,
     tags TEXT[],
-    embedding VECTOR({EMBEDDING_DIMS})
+    clip_embedding VECTOR({EMBEDDING_DIMS}),
+    sbert_embedding VECTOR({EMBEDDING_DIMS})
 )
 """
 
-VEC_INDEX_CREATION_SQL = f"""
-CREATE INDEX IF NOT EXISTS {INDEX_NAME}
+VEC_INDEX_CREATION_SQL_CLIP = f"""
+CREATE INDEX IF NOT EXISTS {INDEX_NAME}_clip
 ON {TABLE_NAME}
-USING {INDEX_TYPE} (embedding {SIMILARITY_OPS})
+USING {INDEX_TYPE} (clip_embedding {SIMILARITY_OPS})
+"""
+
+VEC_INDEX_CREATION_SQL_SBERT = f"""
+CREATE INDEX IF NOT EXISTS {INDEX_NAME}_sbert
+ON {TABLE_NAME}
+USING {INDEX_TYPE} (sbert_embedding {SIMILARITY_OPS});
 """
 
 
-def setup_databse():
+def setup_databse(force: bool = False):
     """Connects to DB and runs setup commands."""
 
     pool = ConnectionPool(conninfo=db_settings.DATABASE_URL)
@@ -47,12 +56,18 @@ def setup_databse():
             logger.info("Extensions are ready.")
             register_vector(conn)
 
+            if force:
+                logger.warning(f"Dropping table {TABLE_NAME}...")
+                cur.execute(f"DROP TABLE IF EXISTS {TABLE_NAME} CASCADE;")
+                logger.info(f"Table {TABLE_NAME} dropped.")
+
             logger.info("Creating table...")
             cur.execute(ASSET_TABLE_CREATION_SQL)
             logger.info(f"Table {TABLE_NAME} is ready.")
 
             logger.info("Creating index...")
-            cur.execute(VEC_INDEX_CREATION_SQL)
+            cur.execute(VEC_INDEX_CREATION_SQL_CLIP)
+            cur.execute(VEC_INDEX_CREATION_SQL_SBERT)
             logger.info("Index is ready.")
 
         conn.commit()
@@ -61,4 +76,11 @@ def setup_databse():
 
 
 if __name__ == "__main__":
-    setup_databse()
+    parser = argparse.ArgumentParser(description="Initialize the database.")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force rebuild of the table by dropping it first.",
+    )
+    args = parser.parse_args()
+    setup_databse(force=args.force)

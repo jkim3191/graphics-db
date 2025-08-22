@@ -11,7 +11,12 @@ INDEX_TYPE = "diskann"
 SIMILARITY_OPS = "vector_cosine_ops"
 
 # Data sources
-EMBEDDING_PATHS = {"Objaverse": "data/objaverse/clip_features.pkl"}
+EMBEDDING_PATHS = {
+    "Objaverse": {
+        "clip": "data/objaverse/clip_features.pkl",
+        "sbert": "data/objaverse/sbert_features.pkl",
+    }
+}
 
 # App
 USE_MEAN_POOL = True

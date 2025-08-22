@@ -13,19 +13,25 @@ from graphics_db_server.schemas.asset import Asset
 from graphics_db_server.logging import logger
 
 
-def search_assets(conn, query_embedding: np.ndarray, top_k: int) -> list[dict]:
+def search_assets(
+    conn, query_embedding_clip: np.ndarray, query_embedding_sbert: np.ndarray, top_k: int
+) -> list[dict]:
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             f"""
             SELECT
                 uid,
                 url,
-                1 - (embedding <=> %(query_vector)s) AS similarity_score
+                (1 - (clip_embedding <=> %(query_vector_clip)s)) + (1 - (sbert_embedding <=> %(query_vector_sbert)s)) as similarity_score
             FROM {TABLE_NAME}
-            ORDER BY embedding <=> %(query_vector)s
+            ORDER BY (clip_embedding <=> %(query_vector_clip)s) + (sbert_embedding <=> %(query_vector_sbert)s)
             LIMIT %(limit)s;
             """,
-            {"query_vector": query_embedding, "limit": top_k},
+            {
+                "query_vector_clip": query_embedding_clip,
+                "query_vector_sbert": query_embedding_sbert,
+                "limit": top_k,
+            },
         )
         results = cur.fetchall()
     if not results:
@@ -45,13 +51,14 @@ def insert_assets(conn, assets: List[Asset]):
                 asset.uid,
                 asset.url,
                 asset.tags,
-                asset.embedding,
+                asset.clip_embedding,
+                asset.sbert_embedding,
             )
         )
 
     with conn.cursor() as cur:
         cur.executemany(
-            "INSERT INTO assets (uid, url, tags, embedding) VALUES (%s, %s, %s, %s)",
+            "INSERT INTO assets (uid, url, tags, clip_embedding, sbert_embedding) VALUES (%s, %s, %s, %s, %s)",
             data,
         )
         conn.commit()

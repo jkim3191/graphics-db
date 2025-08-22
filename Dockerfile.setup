@@ -17,4 +17,4 @@ COPY . /app/
 RUN pip install -e .
 
 # Run init_db.py when the container launches
-CMD ["python", "src/graphics_db_server/scripts/init_db.py"]
+CMD ["python", "src/graphics_db_server/scripts/init_db.py", "--force"]

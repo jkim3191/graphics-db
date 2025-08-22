@@ -12,3 +12,4 @@ pyvista
 rich
 torch
 uvicorn
+sentence-transformers
