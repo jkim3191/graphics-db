@@ -27,6 +27,9 @@ CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
     
     url TEXT,
     tags TEXT[],
+    source TEXT,
+    license TEXT,
+    asset_type TEXT,
     clip_embedding VECTOR({EMBEDDING_DIMS}),
     sbert_embedding VECTOR({EMBEDDING_DIMS})
 )

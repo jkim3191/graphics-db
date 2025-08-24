@@ -109,6 +109,7 @@ def load_objaverse_assets(limit: int = None) -> list[AssetCreate]:
             tags=_get_tag_names(annotation.get("tags")),
             source="objaverse",
             license=annotation.get("license"),
+            asset_type="model",
             clip_embedding=clip_embedding,
             sbert_embedding=sbert_embedding,
         )

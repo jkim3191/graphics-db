@@ -18,6 +18,11 @@ EMBEDDING_PATHS = {
     }
 }
 
+# Poly Haven API
+POLYHAVEN_API_BASE_URL = "https://api.polyhaven.com"
+POLYHAVEN_USER_AGENT = "graphics-db-server/0.0.1"
+POLYHAVEN_CACHE_DIR = os.path.expanduser("~/.polyhaven_cache")
+
 # App
 USE_MEAN_POOL = True
 THUMBNAIL_RESOLUTION = 1024
