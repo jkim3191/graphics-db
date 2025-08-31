@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 
+from graphics_db_server.core.config import SCALE_MAX_LENGTH_THRESHOLD
 from graphics_db_server.db.session import get_db_connection
 from graphics_db_server.db import crud
 from graphics_db_server.embeddings.clip import get_clip_embeddings
@@ -13,12 +14,13 @@ from graphics_db_server.sources.from_objaverse import (
     download_assets,
     get_thumbnails,
 )
+from graphics_db_server.utils.asset_validation import validate_asset_scales
 
 router = APIRouter()
 
 
 @router.get("/assets/search", response_model=list[Asset])
-def search_assets(query: str, top_k: int = 5):
+def search_assets(query: str, top_k: int = 5, validate_scale: bool = False):
     """
     Finds the top_k most similar assets for a given query.
     """
@@ -35,8 +37,14 @@ def search_assets(query: str, top_k: int = 5):
     if not results:
         logger.debug(f"No results found for query: {query}")
         return []
-    else:
-        return results
+    elif validate_scale:
+        asset_uids = [asset.uid for asset in results]
+        asset_paths = download_assets(asset_uids)
+        validation_results = validate_asset_scales(
+            asset_paths, SCALE_MAX_LENGTH_THRESHOLD
+        )
+        return [asset for asset in results if validation_results.get(asset.uid, False)]
+    return results
 
 
 class AssetThumbnailsRequest(BaseModel):
@@ -67,16 +75,14 @@ def serve_glb_file(asset_uid: str):
     """
     try:
         asset_paths = download_assets([asset_uid])
-        
+
         if asset_uid not in asset_paths:
             raise HTTPException(status_code=404, detail="Asset not found")
-        
+
         glb_path = asset_paths[asset_uid]
-        
+
         return FileResponse(
-            path=glb_path,
-            media_type="model/gltf-binary",
-            filename=f"{asset_uid}.glb"
+            path=glb_path, media_type="model/gltf-binary", filename=f"{asset_uid}.glb"
         )
     except Exception as e:
         logger.error(f"Error serving .glb file for asset {asset_uid}: {e}")

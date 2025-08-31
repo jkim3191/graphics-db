@@ -19,6 +19,7 @@ EMBEDDING_PATHS = {
 }
 VALIDATE_SCALE = True
 SCALE_RESOLUTION_STRATEGY = "reject"  # options: ["reject", "rescale"]
+SCALE_MAX_LENGTH_THRESHOLD = 100.0  # filter out centimeter-based (or just large) assets
 
 # App
 USE_MEAN_POOL = True

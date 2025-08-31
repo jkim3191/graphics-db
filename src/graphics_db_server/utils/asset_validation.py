@@ -61,3 +61,35 @@ def is_valid_asset_scale(glb_path: str, max_edge_length: float = 100.0) -> bool:
     """
     is_valid, _ = validate_asset_scale(glb_path, max_edge_length)
     return is_valid
+
+
+def validate_asset_scales(asset_paths: dict[str, str], max_edge_length: float = 100.0) -> dict[str, bool]:
+    """
+    Validates the scale of downloaded GLB assets to reject those that are too large
+    (likely in centimeters instead of meters).
+
+    Args:
+        asset_paths: A dictionary mapping asset UIDs to their .glb file paths.
+        max_edge_length: Maximum allowed edge length in meters (default: 100.0)
+
+    Returns:
+        A dictionary mapping asset UIDs to validation results (True if valid, False if rejected).
+    """
+    validation_results = {}
+    for uid, glb_path_str in asset_paths.items():
+        glb_path = Path(glb_path_str).resolve()
+
+        if not glb_path.exists():
+            validation_results[uid] = False
+            print(f"WARNING: GLB file not found for asset {uid}: {glb_path}")
+            continue
+
+        is_valid, reason = validate_asset_scale(str(glb_path), max_edge_length)
+        validation_results[uid] = is_valid
+
+        if not is_valid:
+            print(f"INFO: Rejecting asset {uid}: {reason}")
+        else:
+            print(f"INFO: Asset {uid} passed scale validation")
+
+    return validation_results
