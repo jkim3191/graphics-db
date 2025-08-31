@@ -17,6 +17,8 @@ EMBEDDING_PATHS = {
         "sbert": "data/objaverse/sbert_features.pkl",
     }
 }
+VALIDATE_SCALE = True
+SCALE_RESOLUTION_STRATEGY = "reject"  # options: ["reject", "rescale"]
 
 # App
 USE_MEAN_POOL = True
