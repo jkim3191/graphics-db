@@ -1,7 +1,6 @@
 import base64
-import numpy as np
-from fastapi import APIRouter, Body
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 
 from graphics_db_server.db.session import get_db_connection
@@ -59,3 +58,26 @@ def get_asset_thumbnails(request: AssetThumbnailsRequest):
         response_data[uid] = base64.b64encode(image_data).decode("utf-8")
 
     return JSONResponse(content=response_data)
+
+
+@router.get("/assets/download/{asset_uid}/glb")
+def serve_glb_file(asset_uid: str):
+    """
+    Serves the .glb file for a given Objaverse asset UID.
+    """
+    try:
+        asset_paths = download_assets([asset_uid])
+        
+        if asset_uid not in asset_paths:
+            raise HTTPException(status_code=404, detail="Asset not found")
+        
+        glb_path = asset_paths[asset_uid]
+        
+        return FileResponse(
+            path=glb_path,
+            media_type="model/gltf-binary",
+            filename=f"{asset_uid}.glb"
+        )
+    except Exception as e:
+        logger.error(f"Error serving .glb file for asset {asset_uid}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to serve .glb file")
