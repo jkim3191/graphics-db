@@ -3,6 +3,8 @@ import sys
 
 import pyvista as pv
 
+from graphics_db_server.logging import logger
+
 
 def generate_thumbnail_from_glb(glb_path, output_path, resolution, overwrite=False):
     """
@@ -16,8 +18,8 @@ def generate_thumbnail_from_glb(glb_path, output_path, resolution, overwrite=Fal
     """
     # Check if thumbnail already exists and if we should skip it
     if os.path.exists(output_path) and not overwrite:
-        print(
-            f"INFO: Thumbnail already exists for {os.path.basename(glb_path)}. Skipping."
+        logger.debug(
+            f"Thumbnail already exists for {os.path.basename(glb_path)}. Skipping."
         )
         return
 
@@ -28,28 +30,17 @@ def generate_thumbnail_from_glb(glb_path, output_path, resolution, overwrite=Fal
     try:
         # Set up the plotter for off-screen rendering
         plotter = pv.Plotter(off_screen=True, window_size=[resolution, resolution])
-        # plotter = pv.Plotter(window_size=[resolution, resolution])  # DEBUG
 
         # Directly import GLTF/GLB
         plotter.import_gltf(glb_path)
 
         # Set the camera to an isometric view for a good default angle
-        # Option 1
-        plotter.camera.up = (0, 1, 0)  # NOTE: doesn't really work with isometric...
-        # plotter.reset_camera(). # NOTE: didn't help
-        # plotter.view_isometric()
-
-        # Option 2
         plotter.view_vector(vector=[1, 1, 1], viewup=[0, 1, 0])
 
         # Optional: add XYZ axes annotation gizmo
         plotter.add_axes()
 
-        # # Optional: Use parallel projection for a clearer, more technical look
-        # plotter.enable_parallel_projection()
-
         # Take a screenshot and save it
-        # plotter.show()  # DEBUG
         plotter.screenshot(output_path, transparent_background=True)
 
         # Clean up and close the plotter to free memory

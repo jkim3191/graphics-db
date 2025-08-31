@@ -17,7 +17,8 @@ EMBEDDING_PATHS = {
         "sbert": "data/objaverse/sbert_features.pkl",
     }
 }
-VALIDATE_SCALE = True
+# VALIDATE_SCALE = True
+VALIDATE_SCALE = False
 SCALE_RESOLUTION_STRATEGY = "reject"  # options: ["reject", "rescale"]
 SCALE_MAX_LENGTH_THRESHOLD = 100.0  # filter out centimeter-based (or just large) assets
 

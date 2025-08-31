@@ -15,6 +15,7 @@ from graphics_db_server.sources.from_objaverse import (
     get_thumbnails,
 )
 from graphics_db_server.utils.asset_validation import validate_asset_scales
+from graphics_db_server.utils.geometry import get_glb_dimensions
 
 router = APIRouter()
 
@@ -27,7 +28,7 @@ def search_assets(query: str, top_k: int = 5, validate_scale: bool = False):
     query_embedding_clip = get_clip_embeddings(query)
     query_embedding_sbert = get_sbert_embeddings(query)
     with get_db_connection() as conn:
-        results = crud.search_assets(
+        results: list[dict] = crud.search_assets(
             conn=conn,
             query_embedding_clip=query_embedding_clip,
             query_embedding_sbert=query_embedding_sbert,
@@ -38,12 +39,12 @@ def search_assets(query: str, top_k: int = 5, validate_scale: bool = False):
         logger.debug(f"No results found for query: {query}")
         return []
     elif validate_scale:
-        asset_uids = [asset.uid for asset in results]
+        asset_uids = [asset["uid"] for asset in results]
         asset_paths = download_assets(asset_uids)
         validation_results = validate_asset_scales(
             asset_paths, SCALE_MAX_LENGTH_THRESHOLD
         )
-        return [asset for asset in results if validation_results.get(asset.uid, False)]
+        return [asset for asset in results if validation_results.get(asset["uid"], False)]
     return results
 
 
@@ -69,9 +70,9 @@ def get_asset_thumbnails(request: AssetThumbnailsRequest):
 
 
 @router.get("/assets/download/{asset_uid}/glb")
-def serve_glb_file(asset_uid: str):
+def download_glb_file(asset_uid: str):
     """
-    Serves the .glb file for a given Objaverse asset UID.
+    Downloads the .glb file for a given Objaverse asset UID.
     """
     try:
         asset_paths = download_assets([asset_uid])
@@ -87,3 +88,40 @@ def serve_glb_file(asset_uid: str):
     except Exception as e:
         logger.error(f"Error serving .glb file for asset {asset_uid}: {e}")
         raise HTTPException(status_code=500, detail="Failed to serve .glb file")
+
+
+@router.get("/assets/{asset_uid}/metadata")
+def get_asset_metadata(asset_uid: str):
+    """
+    Gets metadata for a given asset UID, including dimensions.
+    """
+    try:
+        asset_paths = download_assets([asset_uid])
+
+        if asset_uid not in asset_paths:
+            raise HTTPException(status_code=404, detail="Asset not found")
+
+        glb_path = asset_paths[asset_uid]
+        success, dimensions, error = get_glb_dimensions(glb_path)
+
+        if not success:
+            logger.error(f"Error getting dimensions for asset {asset_uid}: {error}")
+            raise HTTPException(status_code=500, detail="Failed to get asset dimensions")
+
+        x_size, y_size, z_size = dimensions
+        metadata = {
+            "uid": asset_uid,
+            "dimensions": {
+                "x": x_size,
+                "y": y_size,
+                "z": z_size
+            }
+        }
+
+        return JSONResponse(content=metadata)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting metadata for asset {asset_uid}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get asset metadata")

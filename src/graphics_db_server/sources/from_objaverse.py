@@ -16,6 +16,7 @@ from graphics_db_server.core.config import (
     THUMBNAIL_RESOLUTION,
     SCALE_MAX_LENGTH_THRESHOLD,
 )
+from graphics_db_server.logging import logger
 from graphics_db_server.schemas.asset import AssetCreate
 from graphics_db_server.utils.asset_validation import validate_asset_scales
 from graphics_db_server.utils.thumbnail import generate_thumbnail_from_glb
@@ -143,12 +144,12 @@ def load_objaverse_assets(
     if not candidate_uids:
         return []
 
-    print(f"INFO: Found {len(candidate_uids)} candidate assets. Downloading GLB files for validation...")
+    logger.info(f"Found {len(candidate_uids)} candidate assets. Downloading GLB files for validation...")
 
     # Download the GLB files for validation
     asset_paths = download_assets(candidate_uids)
 
-    print(f"INFO: Downloaded {len(asset_paths)} GLB files. Validating scales...")
+    logger.info(f"Downloaded {len(asset_paths)} GLB files. Validating scales...")
 
     # Validate the scales
     validation_results = validate_asset_scales(asset_paths, max_edge_length)
@@ -168,7 +169,7 @@ def load_objaverse_assets(
 
 
 
-    print(f"INFO: Scale validation complete. {len(valid_assets)} out of {len(candidate_assets)} assets passed validation.")
+    logger.info(f"Scale validation complete. {len(valid_assets)} out of {len(candidate_assets)} assets passed validation.")
 
     return valid_assets
 
@@ -222,5 +223,5 @@ if __name__ == "__main__":
     print(f"Loaded {len(assets)} assets without validation")
 
     # Test with validation (slower, downloads GLB files)
-    # assets = load_objaverse_assets(limit=3, validate_scale=True)
-    # print(f"Loaded {len(assets)} validated assets")
+    assets = load_objaverse_assets(limit=3, validate_scale=True)
+    print(f"Loaded {len(assets)} validated assets")
