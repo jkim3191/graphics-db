@@ -1,6 +1,7 @@
 import base64
 import numpy as np
-from fastapi import APIRouter, Body
+from typing import Optional
+from fastapi import APIRouter, Body, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
