@@ -5,6 +5,7 @@ from graphics_db_server.sources.from_objaverse import load_objaverse_assets
 from graphics_db_server.sources.from_polyhaven import load_polyhaven_assets
 from graphics_db_server.schemas import ObjaverseAssetCreate, PolyhavenAssetCreate
 from graphics_db_server.logging import logger
+from graphics_db_server.core.config import VALIDATE_SCALE, SCALE_RESOLUTION_STRATEGY
 
 
 def convert_to_objaverse_assets(legacy_assets):
@@ -59,9 +60,11 @@ if __name__ == "__main__":
     logger.info("Ingesting data with pre-categorization...")
 
     with get_db_connection() as conn:
-        # Load Objaverse assets
+        # Load Objaverse assets with validation options from main branch
         logger.info("Loading Objaverse assets...")
-        legacy_objaverse_assets = load_objaverse_assets()
+        options = {"validate_scale": VALIDATE_SCALE,
+                   "scale_resolution_strategy": SCALE_RESOLUTION_STRATEGY}
+        legacy_objaverse_assets = load_objaverse_assets(**options)
         logger.info(f"Loaded {len(legacy_objaverse_assets)} raw Objaverse assets")
 
         # Convert to categorized Objaverse assets

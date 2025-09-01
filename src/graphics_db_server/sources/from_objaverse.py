@@ -10,12 +10,15 @@ import objaverse
 # import objaverse.xl as oxl
 from pydantic import BaseModel
 
-from graphics_db_server.schemas.asset import AssetCreate
 from graphics_db_server.core.config import (
     EMBEDDING_PATHS,
     USE_MEAN_POOL,
     THUMBNAIL_RESOLUTION,
+    SCALE_MAX_LENGTH_THRESHOLD,
 )
+from graphics_db_server.logging import logger
+from graphics_db_server.schemas.asset import AssetCreate
+from graphics_db_server.utils.asset_validation import validate_asset_scales
 from graphics_db_server.utils.thumbnail import generate_thumbnail_from_glb
 
 
@@ -72,20 +75,33 @@ def _load_embedding_map(
     return embedding_map
 
 
-def load_objaverse_assets(limit: int = None) -> list[AssetCreate]:
+def load_objaverse_assets(
+    limit: int = None,
+    validate_scale: bool = False,
+    max_edge_length: float = SCALE_MAX_LENGTH_THRESHOLD,
+    scale_resolution_strategy: str = "reject",
+) -> list[AssetCreate]:
     """
     Loads asset metadata from the objaverse dataset.
+
+    Args:
+        limit: Maximum number of assets to return
+        validate_scale: If True, downloads GLB files and validates their scale
+        max_edge_length: Maximum allowed edge length in meters for scale validation (only used if validate_scale=True)
+
+    Returns:
+        List of AssetCreate objects
     """
     # NOTE: this will download a ~3GB file on first run.
     annotations = objaverse.load_annotations()
     clip_embedding_map = _load_embedding_map("clip")
     sbert_embedding_map = _load_embedding_map("sbert")
 
-    assets: list[AssetCreate] = []
-    for uid, annotation in annotations.items():
-        if limit is not None and len(assets) >= limit:
-            break
+    # First, collect candidate assets based on metadata
+    candidate_assets = []
+    candidate_uids = []
 
+    for uid, annotation in annotations.items():
         if not _is_valid_annotation(annotation):
             continue
 
@@ -113,9 +129,50 @@ def load_objaverse_assets(limit: int = None) -> list[AssetCreate]:
             clip_embedding=clip_embedding,
             sbert_embedding=sbert_embedding,
         )
-        assets.append(asset)
+        candidate_assets.append(asset)
+        candidate_uids.append(uid)
 
-    return assets
+        # If validation is enabled and we have many candidates, collect more to account for rejections
+        target_candidates = limit * 2 if validate_scale and limit is not None else limit
+        if target_candidates is not None and len(candidate_assets) >= target_candidates:
+            break
+
+    # If no scale validation is needed, return the assets directly
+    if not validate_scale:
+        return candidate_assets[:limit] if limit is not None else candidate_assets
+
+    # Scale validation path
+    if not candidate_uids:
+        return []
+
+    logger.info(f"Found {len(candidate_uids)} candidate assets. Downloading GLB files for validation...")
+
+    # Download the GLB files for validation
+    asset_paths = download_assets(candidate_uids)
+
+    logger.info(f"Downloaded {len(asset_paths)} GLB files. Validating scales...")
+
+    # Validate the scales
+    validation_results = validate_asset_scales(asset_paths, max_edge_length)
+
+    # Filter to only include valid assets
+    valid_assets = []
+    for asset in candidate_assets:
+        if validation_results.get(asset.uid, False):
+            valid_assets.append(asset)
+        else:
+            if scale_resolution_strategy == "reject":
+                continue
+            elif scale_resolution_strategy == "rescale":
+                raise NotImplementedError()
+        if limit is not None and len(valid_assets) >= limit:
+            break
+
+
+
+    logger.info(f"Scale validation complete. {len(valid_assets)} out of {len(candidate_assets)} assets passed validation.")
+
+    return valid_assets
 
 
 def download_assets(asset_ids: list[str]):
@@ -130,6 +187,8 @@ def download_assets(asset_ids: list[str]):
         uids=asset_ids, download_processes=int(processes / 2)
     )
     return asset_paths
+
+
 
 
 def get_thumbnails(asset_paths: dict[str, str]) -> dict[str, Path]:
@@ -160,4 +219,10 @@ def get_thumbnails(asset_paths: dict[str, str]) -> dict[str, Path]:
 
 
 if __name__ == "__main__":
-    load_objaverse_assets(limit=3)
+    # Test without validation (fast)
+    assets = load_objaverse_assets(limit=3)
+    print(f"Loaded {len(assets)} assets without validation")
+
+    # Test with validation (slower, downloads GLB files)
+    assets = load_objaverse_assets(limit=3, validate_scale=True)
+    print(f"Loaded {len(assets)} validated assets")

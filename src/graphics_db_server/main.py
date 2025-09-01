@@ -1,5 +1,6 @@
 import psycopg
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from graphics_db_server.api.v0.endpoints import objects, materials, assets
 from graphics_db_server.db.session import get_db_connection
@@ -13,10 +14,18 @@ app = FastAPI(
     version="1.0.0",
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Purpose-specific endpoints
 app.include_router(objects.router, prefix="/api/v0", tags=["3D Objects"])
 app.include_router(materials.router, prefix="/api/v0", tags=["Surface Materials"])
-app.include_router(assets.router, prefix="/api/v0", tags=["Assets (Legacy)"])
+app.include_router(assets.router, prefix="/api/v0", tags=["Assets"])
 
 
 @app.get("/healthcheck")
